@@ -1,6 +1,7 @@
 import Rx from 'rx';
+import _ from 'lodash';
 
-export function getRandomPlanet() {
+export function getRandomPlanets() {
   const requestStream = Rx.Observable.just('https://swapi.co/api/planets/');
 
   return requestStream
@@ -8,11 +9,7 @@ export function getRandomPlanet() {
       return Rx.Observable.fromPromise(fetch(requestUrl).then(response => response.json()));
     })
     .map(response => {
-      const random = Math.round(Math.random() * 10);
-
-      console.log(random);
-
-      return response.results[random];
+      return _.sampleSize(response.results, 3);
     });
 }
 
