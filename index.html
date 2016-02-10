@@ -1,16 +1,153 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Hateful Four SWAPI Game</title>
-    <script>
-      // install babel hooks in the renderer process
-      require('babel-register');
-      require('./scripts/main');
-    </script>
-  </head>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.0.6/rx.all.js"></script>
+  <script src="https://cdn.rawgit.com/cyclejs/cycle-core/master/dist/cycle.min.js"></script>
+  <script src="https://cdn.rawgit.com/cyclejs/cycle-dom/master/dist/cycle-dom.min.js"></script>
+  <script src="https://cdn.rawgit.com/cyclejs/isolate/master/dist/cycle-isolate.min.js"></script>
 
-  <body>
+  <title>JS Bin</title>
+</head>
+<body>
+  <div id="app"></div>
 
-    hello
-  </body>
+<script id="jsbin-javascript">
+'use strict';
+var _CycleDOM = CycleDOM;
+var div = _CycleDOM.div;
+var input = _CycleDOM.input;
+var h2 = _CycleDOM.h2;
+var makeDOMDriver = _CycleDOM.makeDOMDriver;
+var isolate = CycleIsolate;
+function intent(DOMSource) {
+  return DOMSource.select('.search').events('input').map(function (ev) {
+    return console.log(ev.target.value);
+  });
+}
+function InputCycle(sources) {
+  var changes = intent(sources.DOM);
+  var state$ = model(changes, sources.props);
+  var vtree$ = view(state$);
+  return {
+    DOM: vtree$,
+    value: state$.map(function (state) {
+      return state.value;
+    })
+  };
+}
+function model(newValue$, props$) {
+  var initialValue$ = props$.map(function (props) {
+    return props.init;
+  }).first();
+  var value$ = initialValue$.concat(newValue$);
+  return Rx.Observable.combineLatest(value$, props$, function (value, props) {
+    if (value === undefined) value = '';
+    return {
+      placeholder: props.placeholder,
+      value: value
+    };
+  });
+}
+function view(state$) {
+  return state$.map(function (state) {
+    return div('', [input('.search', { type: 'text', placeholder: state.placeholder })]);
+  });
+}
+function main(sources) {
+  var searchProps$ = Rx.Observable.of({
+    placeholder: 'Star Wars search'
+  });
+  var SearchInput = isolate(InputCycle);
+  var searchSinks = SearchInput({
+    DOM: sources.DOM, props: searchProps$
+  });
+  var searchVTree$ = searchSinks.DOM;
+  var searchInputValue$ = searchSinks.value;
+  var vtree = Rx.Observable.combineLatest(searchInputValue$, searchVTree$, function (searchInputValue, searchTree) {
+    return div([h2('Searching for: ' + searchInputValue), searchTree]);
+  });
+  return {
+    DOM: vtree
+  };
+}
+var drivers = {
+  DOM: makeDOMDriver('#app')
+};
+Cycle.run(main, drivers);
+fetch('http://swapi.co/api/people/2');
+//  fetch('http://swapi.co/people/').then(function (result) { 
+//    console.log(response.json());
+//  });
+</script>
+
+
+
+<script id="jsbin-source-javascript" type="text/javascript">const { div, input, h2, makeDOMDriver } = CycleDOM;
+const isolate = CycleIsolate;
+function intent(DOMSource) {
+  return DOMSource.select('.search').events('input')
+  .map(ev => console.log(ev.target.value));
+}
+function InputCycle(sources) {
+  const changes = intent(sources.DOM);
+  const state$ = model(changes, sources.props);
+  const vtree$ = view(state$);
+  return {
+    DOM: vtree$,
+    value: state$.map(state => state.value)
+  };
+}
+function model(newValue$, props$) {
+    const initialValue$ = props$.map(props => props.init).first();
+    const value$ = initialValue$.concat(newValue$);
+    return Rx.Observable.combineLatest(value$, props$, (value = '', props) => {
+      return {
+        placeholder: props.placeholder,
+        value: value,
+      };
+    });
+}
+function view(state$) {
+  return state$.map(state => div('', [
+    input('.search', { type: 'text', placeholder: state.placeholder })
+  ]));
+}
+function main(sources) {
+  
+  
+  const searchProps$ = Rx.Observable.of({
+    placeholder: 'Star Wars search'
+  });
+  
+  const SearchInput = isolate(InputCycle);
+  
+  const searchSinks = SearchInput({
+    DOM: sources.DOM, props: searchProps$
+  });
+  
+  const searchVTree$ = searchSinks.DOM;
+  const searchInputValue$ = searchSinks.value;
+  
+  const vtree = Rx.Observable.combineLatest(
+    searchInputValue$, searchVTree$, ( searchInputValue, searchTree ) => 
+  div([
+    h2('Searching for: ' + searchInputValue),
+    searchTree
+  ]));
+  
+  return {
+    DOM: vtree
+  };
+}
+const drivers = {
+  DOM: makeDOMDriver('#app'),
+};
+Cycle.run(main, drivers);
+fetch('http://swapi.co/api/people/2');
+//  fetch('http://swapi.co/people/').then(function (result) {  
+//    console.log(response.json());
+//  });</script></body>
 </html>
