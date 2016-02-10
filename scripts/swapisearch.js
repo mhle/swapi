@@ -1,13 +1,12 @@
 import Rx from 'rx';
-import jQuery from 'jquery';
 
 var requestStream = Rx.Observable.just('https://swapi.co/api/planets/');
 
 var responseStream = requestStream
   .flatMap(function(requestUrl) {
-    return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
+    return Rx.Observable.fromPromise(fetch(requestUrl).then(response => response.json()));
   });
 
-responseStream.subscribe(function(response) {
+responseStream.subscribe(response => {
   console.log(response);
 });
