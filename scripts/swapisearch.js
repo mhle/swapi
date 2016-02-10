@@ -1,12 +1,18 @@
 import Rx from 'rx';
 
-var requestStream = Rx.Observable.just('https://swapi.co/api/planets/');
+export function getRandomPlanet() {
+  const requestStream = Rx.Observable.just('https://swapi.co/api/planets/');
 
-var responseStream = requestStream
-  .flatMap(function(requestUrl) {
-    return Rx.Observable.fromPromise(fetch(requestUrl).then(response => response.json()));
-  });
+  return requestStream
+    .flatMap(requestUrl => {
+      return Rx.Observable.fromPromise(fetch(requestUrl).then(response => response.json()));
+    })
+    .map(response => {
+      const random = Math.round(Math.random() * 10);
 
-responseStream.subscribe(response => {
-  console.log(response);
-});
+      console.log(random);
+
+      return response.results[random];
+    });
+}
+
